@@ -36,8 +36,8 @@ int main(int argc, char *argv[])
         abort();
     }
 
-    //fprintf(fout, "reverrsed sorted text\n\n\n");
-    //print_str_array(text, count, fout);
+    fprintf(fout, "reverrsed sorted text\n\n\n");
+    print_str_array(text, count, fout);
     
     fprintf(fout, "\n\nbuffer\n\n");
     print_buf(buf, num_of_bytes, fout);

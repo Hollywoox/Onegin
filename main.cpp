@@ -27,7 +27,7 @@ int main(int argc, char *argv[])
 
     make_str_array(text, buf, num_of_bytes);
 
-    quick_sort(text, 0, count - 1, comp);
+    quick_sort(text, 0, count - 1, comp_reverse);
 
     FILE* fout = fopen("output.txt", "a");
     if(fout == NULL)

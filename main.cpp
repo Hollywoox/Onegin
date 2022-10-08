@@ -11,23 +11,18 @@ int main(int argc, char *argv[])
         printf("Can't open the file!\n");
         abort();
     }  
-   
-    int num_of_bytes = count_bytes(argv[1]);
 
-    char* buf = make_buf(fin, num_of_bytes);
+    Text txt = {};
+    
+    CountBytes(&txt, argv[1]);
 
-    int count = count_str(buf, num_of_bytes);
+    MakeBuf(&txt, fin);
 
-    string* text = (string*)calloc(count, sizeof(string)); 
-    if(text == NULL)
-    {
-        printf("Can't find the required memory block\n");
-        abort(); 
-    }
+    CountStr(&txt);
 
-    make_str_array(text, buf, num_of_bytes);
+    MakeStrArray(&txt);
 
-    quick_sort(text, 0, count - 1, comp_reverse);
+    QuickSort(txt.str_array, 0, txt.num_of_str - 1, CompReverse);
 
     FILE* fout = fopen("output.txt", "a");
     if(fout == NULL)
@@ -36,13 +31,13 @@ int main(int argc, char *argv[])
         abort();
     }
 
-    fprintf(fout, "reverrsed sorted text\n\n\n");
-    print_str_array(text, count, fout);
+    fprintf(fout, "\n\nreverrsed sorted text\n\n");
+    PrintStrArray(&txt, fout);
     
     fprintf(fout, "\n\nbuffer\n\n");
-    print_buf(buf, num_of_bytes, fout);
+    PrintBuf(&txt, fout);
 
-    clear(text, buf);
+    Clear(&txt);
 
     fclose(fin);
     fclose(fout);

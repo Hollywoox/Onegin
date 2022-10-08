@@ -1,68 +1,74 @@
 #include "onegin.h"
 
 
-int count_bytes(char* adr)
+void CountBytes(Text* txt, char* adr)
 {
     struct stat data = {};
     stat(adr, &data);
-    return (int)data.st_size;
+    txt->num_of_bytes = (int)data.st_size;
 }
 
-char* make_buf(FILE* fp, int num_of_bytes)
+void MakeBuf(Text* txt, FILE* fp)
 {
-    char *buf = (char*)calloc(num_of_bytes + 1, sizeof(char));
-    if(buf == NULL)
+    txt->buf = (char*)calloc(txt->num_of_bytes + 1, sizeof(char));
+    if(txt->buf == NULL)
     {
         printf("Can't find the required memory block\n");
         abort(); 
     }
 
-    int read = fread(buf, sizeof(char), num_of_bytes, fp);
-    if(read != num_of_bytes) 
+    int read = fread(txt->buf, sizeof(char), txt->num_of_bytes, fp);
+    if(read != txt->num_of_bytes) 
     {
         printf("Can't read from the file\n");
         abort();
     }
-    *(buf + read) = '\0';
 
-    return buf;
+    *(txt->buf + read) = '\0';
 }
 
-int count_str(char* buf, int num_of_bytes)
+void CountStr(Text* txt)
 {
     int count = 1;
-    for(int i = 0; i < num_of_bytes; i++){
-        if(buf[i] == '\n')
+    for(int i = 0; i < txt->num_of_bytes; ++i){
+        if(txt->buf[i] == '\n')
         {
             ++count;
-            buf[i] = '\0';
+            txt->buf[i] = '\0';
         }
     }
-    
-    return count;
+
+    txt->num_of_str = count;
 }
 
-void make_str_array(string* text, char* buf, int num_of_bytes)
+void MakeStrArray(Text* txt)
 {
-    char *begin_of_str = buf;
-    char *end_of_str = buf;
-    int  num_of_str = 0;
-
-    for(int i = 0; i <= num_of_bytes; ++i)
+    txt->str_array = (string*)calloc(txt->num_of_str, sizeof(string)); 
+    if(txt->str_array == NULL)
     {
-        if(i == num_of_bytes)
+        printf("Can't find the required memory block\n");
+        abort(); 
+    }
+
+    char *begin_of_str = txt->buf;
+    char *end_of_str = txt->buf;
+    int  str_number = 0;
+
+    for(int i = 0; i <= txt->num_of_bytes; ++i)
+    {
+        if(i == txt->num_of_bytes)
         {
-           text[num_of_str].str = begin_of_str;
-           text[num_of_str].size = end_of_str - begin_of_str; 
+           txt->str_array[str_number].str = begin_of_str;
+           txt->str_array[str_number].size = end_of_str - begin_of_str; 
            break;
         }
 
         if((*end_of_str) == '\0')
         {
-            text[num_of_str].str = begin_of_str;
-            text[num_of_str].size = end_of_str - begin_of_str;
+            txt->str_array[str_number].str = begin_of_str;
+            txt->str_array[str_number].size = end_of_str - begin_of_str;
             
-            ++num_of_str;
+            ++str_number;
             begin_of_str = end_of_str + 1;
         }    
 
@@ -70,7 +76,7 @@ void make_str_array(string* text, char* buf, int num_of_bytes)
     }
 }
 
-int comp(const void* aPtr, const void* bPtr)
+int Comp(const void* aPtr, const void* bPtr)
 {
     int str1_size = ((string*)aPtr)->size; 
     if(str1_size == 0) return -1;
@@ -104,7 +110,7 @@ int comp(const void* aPtr, const void* bPtr)
     return 0;
 }
 
-int comp_reverse(const void* aPtr, const void* bPtr)
+int CompReverse(const void* aPtr, const void* bPtr)
 {
     int str1_size = ((string*)aPtr)->size; 
     if(str1_size == 0) return -1;
@@ -138,7 +144,7 @@ int comp_reverse(const void* aPtr, const void* bPtr)
     return 0;
 }
 
-void swap(string* str1, string* str2)
+void Swap(string* str1, string* str2)
 {
     string exchange = *str1;
 
@@ -146,18 +152,18 @@ void swap(string* str1, string* str2)
     *str2 = exchange;
 }
 
-void bubble_sort(string* text, int num_of_str, int (*comp)(const void*, const void*))
+void BubbleSort(Text* txt, int (*comp)(const void*, const void*))
 {
-    for(int i = 0; i < num_of_str; ++i)
+    for(int i = 0; i < txt->num_of_str; ++i)
     {
-        for(int j = 1; j < num_of_str - i; ++j)
+        for(int j = 1; j < txt->num_of_str - i; ++j)
         {
-            if(comp(&text[j - 1], &text[j]) > 0) swap(&text[j - 1], &text[j]);
+            if(comp(&txt->str_array[j - 1], &txt->str_array[j]) > 0) Swap(&txt->str_array[j - 1], &txt->str_array[j]);
         }
     }
 }
 
-void quick_sort(string* text, int first, int last, int (*comp)(const void*, const void*))
+void QuickSort(string* text, int first, int last, int (*comp)(const void*, const void*))
 {
     int left, right, pivot;
     
@@ -173,24 +179,24 @@ void quick_sort(string* text, int first, int last, int (*comp)(const void*, cons
             while(comp(&text[right], &text[pivot]) > 0) right--;
             if(left < right)
             {
-                swap(&text[left], &text[right]);
+                Swap(&text[left], &text[right]);
             }
         }
 
-        swap(&text[pivot], &text[right]);
-        quick_sort(text, first, right - 1, comp);
-        quick_sort(text, right + 1, last, comp);
+        Swap(&text[pivot], &text[right]);
+        QuickSort(text, first, right - 1, comp);
+        QuickSort(text, right + 1, last, comp);
     }
 }
 
-void print_buf(char *buf, int num_of_bytes, FILE* fp)
+void PrintBuf(Text* txt, FILE* fp)
 {
-    char *begin_of_str = buf;
-    char *end_of_str = buf;
+    char *begin_of_str = txt->buf;
+    char *end_of_str = txt->buf;
 
-    for(int i = 0; i <= num_of_bytes; ++i)
+    for(int i = 0; i <= txt->num_of_bytes; ++i)
     {
-        if(i == num_of_bytes)
+        if(i == txt->num_of_bytes)
         {
             fprintf(fp, "%s", begin_of_str);
             fprintf(fp, "\n");
@@ -209,23 +215,23 @@ void print_buf(char *buf, int num_of_bytes, FILE* fp)
     }
 }
 
-void print_str_array(string *text, int count_str, FILE* fp)
+void PrintStrArray(Text* txt, FILE* fp)
 {
-    for(int i = 0; i < count_str; ++i)
+    for(int i = 0; i < txt->num_of_str; ++i)
     {
-        if(text[i].size != 0)
+        if(txt->str_array[i].size != 0)
         {
-            fprintf(fp, "%s", text[i].str);
+            fprintf(fp, "%s", txt->str_array[i].str);
             fprintf(fp, "\n");
         }
     }
 }
 
-void clear(string *text, char *buf)
+void Clear(Text* txt)
 {
-    free(text);
-    text = NULL;
+    free(txt->str_array);
+    txt->str_array = NULL;
 
-    free(buf);
-    buf = NULL;
+    free(txt->buf);
+    txt->buf = NULL;
 }
